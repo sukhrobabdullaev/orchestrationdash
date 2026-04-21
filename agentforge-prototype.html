@@ -1,0 +1,966 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AgentForge — Agent Orchestration Platform</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #09090b;
+    --bg2: #111114;
+    --bg3: #18181c;
+    --bg4: #1f1f26;
+    --border: #2a2a35;
+    --border2: #38384a;
+    --text: #e8e8f0;
+    --text2: #9090a8;
+    --text3: #55556a;
+    --accent: #7c6aff;
+    --accent2: #9d8fff;
+    --accent-glow: rgba(124,106,255,0.15);
+    --green: #22d3a0;
+    --green-dim: rgba(34,211,160,0.12);
+    --amber: #f59e0b;
+    --amber-dim: rgba(245,158,11,0.12);
+    --red: #f43f5e;
+    --red-dim: rgba(244,63,94,0.12);
+    --blue: #38bdf8;
+    --blue-dim: rgba(56,189,248,0.12);
+    --mono: 'IBM Plex Mono', monospace;
+    --sans: 'Syne', sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--mono);
+    min-height: 100vh;
+    display: flex;
+    overflow: hidden;
+  }
+
+  /* ── SIDEBAR ── */
+  .sidebar {
+    width: 220px;
+    min-width: 220px;
+    background: var(--bg2);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    padding: 0;
+    position: relative;
+    z-index: 10;
+  }
+
+  .logo {
+    padding: 20px 20px 18px;
+    border-bottom: 1px solid var(--border);
+  }
+  .logo-mark {
+    font-family: var(--sans);
+    font-weight: 800;
+    font-size: 17px;
+    letter-spacing: -0.5px;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .logo-icon {
+    width: 26px; height: 26px;
+    background: var(--accent);
+    border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px;
+  }
+  .logo-sub {
+    font-size: 10px;
+    color: var(--text3);
+    letter-spacing: 0.08em;
+    margin-top: 3px;
+    text-transform: uppercase;
+  }
+
+  .nav {
+    padding: 12px 10px;
+    flex: 1;
+    overflow-y: auto;
+  }
+  .nav-section {
+    font-size: 9px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--text3);
+    padding: 14px 10px 6px;
+  }
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    padding: 8px 10px;
+    border-radius: 7px;
+    cursor: pointer;
+    font-size: 12.5px;
+    color: var(--text2);
+    transition: all 0.15s;
+    position: relative;
+  }
+  .nav-item:hover { background: var(--bg3); color: var(--text); }
+  .nav-item.active {
+    background: var(--accent-glow);
+    color: var(--accent2);
+    border: 1px solid rgba(124,106,255,0.2);
+  }
+  .nav-icon { width: 14px; text-align: center; font-size: 13px; }
+  .nav-badge {
+    margin-left: auto;
+    background: var(--accent);
+    color: #fff;
+    font-size: 9px;
+    padding: 1px 5px;
+    border-radius: 9px;
+    font-weight: 600;
+  }
+  .nav-badge.green { background: var(--green); color: #000; }
+  .nav-badge.amber { background: var(--amber); color: #000; }
+
+  .sidebar-footer {
+    border-top: 1px solid var(--border);
+    padding: 14px 16px;
+  }
+  .workspace-pill {
+    display: flex; align-items: center; gap: 8px;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 8px 10px;
+    cursor: pointer;
+  }
+  .ws-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); }
+  .ws-name { font-size: 11px; color: var(--text2); }
+
+  /* ── MAIN ── */
+  .main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  /* ── TOPBAR ── */
+  .topbar {
+    height: 56px;
+    min-height: 56px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    padding: 0 24px;
+    gap: 16px;
+    background: var(--bg);
+  }
+  .topbar-title {
+    font-family: var(--sans);
+    font-weight: 700;
+    font-size: 15px;
+    flex: 1;
+  }
+  .topbar-tabs {
+    display: flex;
+    gap: 2px;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 3px;
+  }
+  .tab-btn {
+    font-family: var(--mono);
+    font-size: 11px;
+    padding: 5px 12px;
+    border-radius: 5px;
+    cursor: pointer;
+    color: var(--text2);
+    border: none;
+    background: none;
+    transition: all 0.15s;
+  }
+  .tab-btn.active { background: var(--bg4); color: var(--text); border: 1px solid var(--border2); }
+  .tab-btn:hover:not(.active) { color: var(--text); }
+
+  .btn {
+    font-family: var(--mono);
+    font-size: 11px;
+    padding: 7px 14px;
+    border-radius: 7px;
+    cursor: pointer;
+    border: 1px solid var(--border2);
+    background: var(--bg3);
+    color: var(--text);
+    transition: all 0.15s;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .btn:hover { border-color: var(--accent); color: var(--accent2); }
+  .btn.primary {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+    font-weight: 600;
+  }
+  .btn.primary:hover { background: var(--accent2); }
+
+  /* ── CONTENT ── */
+  .content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  /* ── STAT CARDS ── */
+  .stats-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+  }
+  .stat-card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px 18px;
+    position: relative;
+    overflow: hidden;
+    cursor: pointer;
+    transition: border-color 0.2s;
+  }
+  .stat-card:hover { border-color: var(--border2); }
+  .stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+  }
+  .stat-card.green::before { background: var(--green); }
+  .stat-card.accent::before { background: var(--accent); }
+  .stat-card.amber::before { background: var(--amber); }
+  .stat-card.blue::before { background: var(--blue); }
+  .stat-label { font-size: 10px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 8px; }
+  .stat-value { font-family: var(--sans); font-size: 28px; font-weight: 800; letter-spacing: -1px; }
+  .stat-card.green .stat-value { color: var(--green); }
+  .stat-card.accent .stat-value { color: var(--accent2); }
+  .stat-card.amber .stat-value { color: var(--amber); }
+  .stat-card.blue .stat-value { color: var(--blue); }
+  .stat-delta {
+    font-size: 10px;
+    margin-top: 6px;
+    color: var(--text3);
+    display: flex; align-items: center; gap: 4px;
+  }
+  .stat-delta.up { color: var(--green); }
+  .stat-delta.down { color: var(--red); }
+
+  /* ── PIPELINE CANVAS ── */
+  .pipeline-section {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  .section-header {
+    display: flex; align-items: center;
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--border);
+    gap: 10px;
+  }
+  .section-title { font-family: var(--sans); font-size: 13px; font-weight: 700; flex: 1; }
+  .status-pill {
+    font-size: 10px;
+    padding: 3px 9px;
+    border-radius: 99px;
+    font-weight: 600;
+  }
+  .pill-green { background: var(--green-dim); color: var(--green); border: 1px solid rgba(34,211,160,0.25); }
+  .pill-amber { background: var(--amber-dim); color: var(--amber); border: 1px solid rgba(245,158,11,0.25); }
+  .pill-red { background: var(--red-dim); color: var(--red); border: 1px solid rgba(244,63,94,0.25); }
+  .pill-blue { background: var(--blue-dim); color: var(--blue); border: 1px solid rgba(56,189,248,0.25); }
+  .pill-accent { background: var(--accent-glow); color: var(--accent2); border: 1px solid rgba(124,106,255,0.25); }
+
+  /* Pipeline visual */
+  .pipeline-canvas {
+    padding: 28px 24px;
+    display: flex;
+    align-items: center;
+    gap: 0;
+    overflow-x: auto;
+    min-height: 140px;
+  }
+
+  .agent-node {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    min-width: 110px;
+    cursor: pointer;
+    position: relative;
+  }
+  .agent-box {
+    width: 90px; height: 72px;
+    border-radius: 10px;
+    border: 1.5px solid var(--border2);
+    background: var(--bg3);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    font-size: 11px;
+    transition: all 0.2s;
+    position: relative;
+    overflow: hidden;
+  }
+  .agent-box:hover { border-color: var(--accent); box-shadow: 0 0 18px var(--accent-glow); }
+  .agent-box.running {
+    border-color: var(--green);
+    box-shadow: 0 0 14px var(--green-dim);
+    animation: pulse-border 2s infinite;
+  }
+  .agent-box.waiting { border-color: var(--border); opacity: 0.5; }
+  .agent-box.done { border-color: var(--border2); }
+  .agent-box.error { border-color: var(--red); box-shadow: 0 0 14px var(--red-dim); }
+
+  @keyframes pulse-border {
+    0%,100% { box-shadow: 0 0 10px var(--green-dim); }
+    50% { box-shadow: 0 0 22px rgba(34,211,160,0.3); }
+  }
+
+  .agent-icon { font-size: 20px; }
+  .agent-role { font-size: 9px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text3); }
+  .agent-name { font-size: 11px; font-weight: 600; color: var(--text); }
+  .agent-status-dot {
+    position: absolute; top: 7px; right: 7px;
+    width: 6px; height: 6px; border-radius: 50%;
+  }
+  .dot-green { background: var(--green); animation: blink 1.5s infinite; }
+  .dot-amber { background: var(--amber); }
+  .dot-gray { background: var(--text3); }
+  .dot-red { background: var(--red); }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+  .agent-label { font-size: 10px; color: var(--text3); text-align: center; max-width: 100px; }
+
+  .pipe-arrow {
+    display: flex; align-items: center;
+    padding: 0 4px;
+    position: relative;
+  }
+  .pipe-line {
+    width: 36px; height: 1.5px;
+    background: var(--border2);
+    position: relative;
+  }
+  .pipe-line.active { background: var(--green); box-shadow: 0 0 6px var(--green); }
+  .pipe-line::after {
+    content: '▶';
+    position: absolute;
+    right: -1px; top: 50%;
+    transform: translateY(-50%);
+    font-size: 8px;
+    color: var(--border2);
+  }
+  .pipe-line.active::after { color: var(--green); }
+
+  /* ── LOG STREAM ── */
+  .two-col {
+    display: grid;
+    grid-template-columns: 1fr 380px;
+    gap: 14px;
+  }
+
+  .log-stream {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  .log-body {
+    padding: 14px;
+    height: 230px;
+    overflow-y: auto;
+    font-size: 11px;
+    line-height: 1.7;
+  }
+  .log-line { display: flex; gap: 10px; }
+  .log-time { color: var(--text3); min-width: 56px; }
+  .log-agent { min-width: 90px; font-weight: 600; }
+  .log-agent.pm { color: var(--accent2); }
+  .log-agent.arch { color: var(--blue); }
+  .log-agent.eng { color: var(--green); }
+  .log-agent.qa { color: var(--amber); }
+  .log-agent.sys { color: var(--text3); }
+  .log-msg { color: var(--text2); flex: 1; }
+  .log-msg .hi { color: var(--text); }
+  .log-cursor { display: inline-block; width: 7px; height: 12px; background: var(--green); vertical-align: middle; animation: blink 1s infinite; }
+
+  /* ── AGENT LIST ── */
+  .agent-list {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  .agent-row {
+    display: flex; align-items: center;
+    padding: 11px 16px;
+    border-bottom: 1px solid var(--border);
+    gap: 12px;
+    cursor: pointer;
+    transition: background 0.15s;
+    font-size: 12px;
+  }
+  .agent-row:last-child { border-bottom: none; }
+  .agent-row:hover { background: var(--bg3); }
+  .agent-row-icon { font-size: 16px; width: 24px; text-align: center; }
+  .agent-row-info { flex: 1; }
+  .agent-row-name { font-weight: 600; font-size: 12px; }
+  .agent-row-model { font-size: 10px; color: var(--text3); margin-top: 1px; }
+  .agent-row-tokens { font-size: 10px; color: var(--text3); text-align: right; }
+
+  /* ── BOTTOM METRICS ── */
+  .metrics-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+  }
+  .metric-card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px 18px;
+  }
+  .metric-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+  .metric-title { font-size: 11px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.08em; }
+  .mini-chart { display: flex; align-items: flex-end; gap: 3px; height: 40px; }
+  .bar {
+    flex: 1; border-radius: 3px 3px 0 0;
+    background: var(--accent);
+    opacity: 0.5;
+    transition: opacity 0.2s;
+    min-width: 4px;
+  }
+  .bar:hover { opacity: 1; }
+  .bar.green { background: var(--green); }
+  .bar.amber { background: var(--amber); }
+  .metric-value { font-family: var(--sans); font-size: 22px; font-weight: 800; margin-bottom: 2px; }
+  .metric-sub { font-size: 10px; color: var(--text3); }
+
+  /* ── RUN HISTORY TABLE ── */
+  .runs-table { width: 100%; border-collapse: collapse; font-size: 11.5px; }
+  .runs-table th {
+    text-align: left;
+    color: var(--text3);
+    font-size: 9px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+    font-weight: 500;
+  }
+  .runs-table td {
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+    color: var(--text2);
+    vertical-align: middle;
+  }
+  .runs-table tr:last-child td { border-bottom: none; }
+  .runs-table tr:hover td { background: var(--bg3); }
+  .run-id { color: var(--accent2); font-weight: 600; }
+  .run-trigger { color: var(--text); }
+  .duration-bar-wrap { display: flex; align-items: center; gap: 8px; }
+  .duration-bar { height: 4px; border-radius: 2px; background: var(--accent); opacity: 0.6; }
+  .cost-val { color: var(--green); font-weight: 600; }
+
+  /* scrollbar */
+  ::-webkit-scrollbar { width: 4px; height: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 4px; }
+
+  /* ── RUNNING ANIMATION on pipeline ── */
+  .progress-fill {
+    position: absolute; bottom: 0; left: 0; right: 0;
+    height: 2px;
+    background: var(--green);
+    transform-origin: left;
+    animation: progress-anim 3s ease-in-out infinite;
+  }
+  @keyframes progress-anim {
+    0% { transform: scaleX(0); opacity: 1; }
+    80% { transform: scaleX(1); opacity: 1; }
+    100% { transform: scaleX(1); opacity: 0; }
+  }
+
+  /* Notification dot */
+  .notif { position: relative; }
+  .notif::after {
+    content: '';
+    position: absolute; top: -2px; right: -2px;
+    width: 6px; height: 6px;
+    background: var(--red);
+    border-radius: 50%;
+    border: 1.5px solid var(--bg2);
+  }
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="logo">
+    <div class="logo-mark">
+      <div class="logo-icon">⬡</div>
+      AgentForge
+    </div>
+    <div class="logo-sub">orchestration platform</div>
+  </div>
+
+  <nav class="nav">
+    <div class="nav-section">Workspace</div>
+    <div class="nav-item active">
+      <span class="nav-icon">◈</span> Overview
+    </div>
+    <div class="nav-item">
+      <span class="nav-icon">⬡</span> Pipelines
+      <span class="nav-badge">4</span>
+    </div>
+    <div class="nav-item">
+      <span class="nav-icon">◎</span> Agents
+    </div>
+    <div class="nav-item">
+      <span class="nav-icon">⊞</span> Tools
+    </div>
+
+    <div class="nav-section">Monitor</div>
+    <div class="nav-item notif">
+      <span class="nav-icon">◉</span> Runs
+    </div>
+    <div class="nav-item">
+      <span class="nav-icon">≡</span> Logs
+    </div>
+    <div class="nav-item">
+      <span class="nav-icon">△</span> Alerts
+      <span class="nav-badge amber">2</span>
+    </div>
+    <div class="nav-item">
+      <span class="nav-icon">$</span> Cost
+    </div>
+
+    <div class="nav-section">Config</div>
+    <div class="nav-item">
+      <span class="nav-icon">⌖</span> Models
+    </div>
+    <div class="nav-item">
+      <span class="nav-icon">⚿</span> Secrets
+    </div>
+    <div class="nav-item">
+      <span class="nav-icon">⊙</span> Settings
+    </div>
+  </nav>
+
+  <div class="sidebar-footer">
+    <div class="workspace-pill">
+      <div class="ws-dot"></div>
+      <div>
+        <div class="ws-name">StoreForge / prod</div>
+      </div>
+    </div>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<div class="main">
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div class="topbar-title">Overview</div>
+    <div class="topbar-tabs">
+      <button class="tab-btn active">Live</button>
+      <button class="tab-btn">History</button>
+      <button class="tab-btn">Analytics</button>
+    </div>
+    <button class="btn">⊕ New Pipeline</button>
+    <button class="btn primary">▶ Run Agent</button>
+  </div>
+
+  <!-- CONTENT -->
+  <div class="content">
+
+    <!-- STAT CARDS -->
+    <div class="stats-row">
+      <div class="stat-card green">
+        <div class="stat-label">Active Agents</div>
+        <div class="stat-value">3</div>
+        <div class="stat-delta up">▲ 1 from last run</div>
+      </div>
+      <div class="stat-card accent">
+        <div class="stat-label">Pipelines</div>
+        <div class="stat-value">4</div>
+        <div class="stat-delta">2 running now</div>
+      </div>
+      <div class="stat-card amber">
+        <div class="stat-label">Tokens / min</div>
+        <div class="stat-value">2.4k</div>
+        <div class="stat-delta up">▲ 18% vs avg</div>
+      </div>
+      <div class="stat-card blue">
+        <div class="stat-label">Cost today</div>
+        <div class="stat-value">$1.38</div>
+        <div class="stat-delta down">▼ $0.42 vs yesterday</div>
+      </div>
+    </div>
+
+    <!-- PIPELINE CANVAS -->
+    <div class="pipeline-section">
+      <div class="section-header">
+        <div class="section-title">store-generation-v2</div>
+        <span class="status-pill pill-green">● running</span>
+        <span style="font-size:10px;color:var(--text3)">run #147 · 1m 23s</span>
+        <button class="btn" style="padding:5px 10px;font-size:10px;">■ Stop</button>
+        <button class="btn" style="padding:5px 10px;font-size:10px;">⚙ Edit</button>
+      </div>
+      <div class="pipeline-canvas">
+
+        <!-- Trigger -->
+        <div class="agent-node">
+          <div class="agent-box done">
+            <div class="agent-icon">⚡</div>
+            <div class="agent-name">Trigger</div>
+            <div class="agent-role">webhook</div>
+            <div class="agent-status-dot dot-gray"></div>
+          </div>
+          <div class="agent-label">POST /generate</div>
+        </div>
+
+        <div class="pipe-arrow"><div class="pipe-line active"></div></div>
+
+        <!-- PM Agent -->
+        <div class="agent-node">
+          <div class="agent-box done">
+            <div class="agent-icon">📋</div>
+            <div class="agent-name">PM Agent</div>
+            <div class="agent-role">planner</div>
+            <div class="agent-status-dot dot-gray"></div>
+          </div>
+          <div class="agent-label">PRD + user stories</div>
+        </div>
+
+        <div class="pipe-arrow"><div class="pipe-line active"></div></div>
+
+        <!-- Architect Agent -->
+        <div class="agent-node">
+          <div class="agent-box running">
+            <div class="agent-icon">🏗</div>
+            <div class="agent-name">Architect</div>
+            <div class="agent-role">designer</div>
+            <div class="agent-status-dot dot-green"></div>
+            <div class="progress-fill"></div>
+          </div>
+          <div class="agent-label">Schema + API design</div>
+        </div>
+
+        <div class="pipe-arrow"><div class="pipe-line"></div></div>
+
+        <!-- Engineer Agent -->
+        <div class="agent-node">
+          <div class="agent-box waiting">
+            <div class="agent-icon">⚙️</div>
+            <div class="agent-name">Engineer</div>
+            <div class="agent-role">coder</div>
+            <div class="agent-status-dot dot-gray"></div>
+          </div>
+          <div class="agent-label">Code generation</div>
+        </div>
+
+        <div class="pipe-arrow"><div class="pipe-line"></div></div>
+
+        <!-- QA Agent -->
+        <div class="agent-node">
+          <div class="agent-box waiting">
+            <div class="agent-icon">✓</div>
+            <div class="agent-name">QA Agent</div>
+            <div class="agent-role">validator</div>
+            <div class="agent-status-dot dot-gray"></div>
+          </div>
+          <div class="agent-label">Tests + deploy</div>
+        </div>
+
+        <div class="pipe-arrow"><div class="pipe-line"></div></div>
+
+        <!-- Output -->
+        <div class="agent-node">
+          <div class="agent-box waiting">
+            <div class="agent-icon">↗</div>
+            <div class="agent-name">Output</div>
+            <div class="agent-role">delivery</div>
+            <div class="agent-status-dot dot-gray"></div>
+          </div>
+          <div class="agent-label">Deployed store</div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- LOG + AGENT LIST -->
+    <div class="two-col">
+      <!-- Log stream -->
+      <div class="log-stream">
+        <div class="section-header">
+          <div class="section-title">Live log stream</div>
+          <span class="status-pill pill-green">● streaming</span>
+          <button class="btn" style="padding:4px 9px;font-size:10px;">⤓ Export</button>
+        </div>
+        <div class="log-body">
+          <div class="log-line"><span class="log-time">09:41:03</span><span class="log-agent sys">[system]</span><span class="log-msg">Pipeline <span class="hi">store-generation-v2</span> triggered via webhook</span></div>
+          <div class="log-line"><span class="log-time">09:41:04</span><span class="log-agent pm">[pm-agent]</span><span class="log-msg">Initializing with model <span class="hi">claude-sonnet-4</span></span></div>
+          <div class="log-line"><span class="log-time">09:41:05</span><span class="log-agent pm">[pm-agent]</span><span class="log-msg">Parsed prompt: <span class="hi">"fashion store for streetwear brand"</span></span></div>
+          <div class="log-line"><span class="log-time">09:41:08</span><span class="log-agent pm">[pm-agent]</span><span class="log-msg">Generated PRD · 847 tokens · $0.004</span></div>
+          <div class="log-line"><span class="log-time">09:41:09</span><span class="log-agent pm">[pm-agent]</span><span class="log-msg">User stories: <span class="hi">12 items</span> written to shared memory</span></div>
+          <div class="log-line"><span class="log-time">09:41:10</span><span class="log-agent sys">[system]</span><span class="log-msg">Handoff PM → Architect via message pool</span></div>
+          <div class="log-line"><span class="log-time">09:41:11</span><span class="log-agent arch">[architect]</span><span class="log-msg">Loaded PRD from shared memory · <span class="hi">12 requirements</span></span></div>
+          <div class="log-line"><span class="log-time">09:41:14</span><span class="log-agent arch">[architect]</span><span class="log-msg">Selecting template: <span class="hi">streetwear-v3</span> (score: 0.94)</span></div>
+          <div class="log-line"><span class="log-time">09:41:18</span><span class="log-agent arch">[architect]</span><span class="log-msg">Designing schema: products, collections, cart, checkout</span></div>
+          <div class="log-line"><span class="log-time">09:41:22</span><span class="log-agent arch">[architect]</span><span class="log-msg">API surface defined · <span class="hi">14 endpoints</span> · writing to context</span></div>
+          <div class="log-line"><span class="log-time">09:42:26</span><span class="log-agent arch">[architect]</span><span class="log-msg">Running… <span class="log-cursor"></span></span></div>
+        </div>
+      </div>
+
+      <!-- Agent list -->
+      <div class="agent-list">
+        <div class="section-header">
+          <div class="section-title">Agents in run</div>
+          <span style="font-size:10px;color:var(--text3)">5 total</span>
+        </div>
+        <div class="agent-row">
+          <div class="agent-row-icon">📋</div>
+          <div class="agent-row-info">
+            <div class="agent-row-name">PM Agent</div>
+            <div class="agent-row-model">claude-sonnet-4 · done</div>
+          </div>
+          <span class="status-pill pill-green" style="font-size:9px;">✓ done</span>
+          <div class="agent-row-tokens">847 tok<br>$0.004</div>
+        </div>
+        <div class="agent-row">
+          <div class="agent-row-icon">🏗</div>
+          <div class="agent-row-info">
+            <div class="agent-row-name">Architect Agent</div>
+            <div class="agent-row-model">claude-sonnet-4 · running</div>
+          </div>
+          <span class="status-pill pill-green" style="font-size:9px;">● running</span>
+          <div class="agent-row-tokens">1.2k tok<br>$0.006</div>
+        </div>
+        <div class="agent-row" style="opacity:0.45;">
+          <div class="agent-row-icon">⚙️</div>
+          <div class="agent-row-info">
+            <div class="agent-row-name">Engineer Agent</div>
+            <div class="agent-row-model">gpt-4o-mini · queued</div>
+          </div>
+          <span class="status-pill" style="font-size:9px;background:var(--bg4);color:var(--text3);border:1px solid var(--border);">waiting</span>
+          <div class="agent-row-tokens">— tok<br>—</div>
+        </div>
+        <div class="agent-row" style="opacity:0.45;">
+          <div class="agent-row-icon">✓</div>
+          <div class="agent-row-info">
+            <div class="agent-row-name">QA Agent</div>
+            <div class="agent-row-model">claude-haiku-4 · queued</div>
+          </div>
+          <span class="status-pill" style="font-size:9px;background:var(--bg4);color:var(--text3);border:1px solid var(--border);">waiting</span>
+          <div class="agent-row-tokens">— tok<br>—</div>
+        </div>
+        <div class="agent-row" style="opacity:0.45;">
+          <div class="agent-row-icon">↗</div>
+          <div class="agent-row-info">
+            <div class="agent-row-name">Deploy Agent</div>
+            <div class="agent-row-model">vercel · queued</div>
+          </div>
+          <span class="status-pill" style="font-size:9px;background:var(--bg4);color:var(--text3);border:1px solid var(--border);">waiting</span>
+          <div class="agent-row-tokens">— tok<br>—</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MINI METRICS -->
+    <div class="metrics-row">
+      <div class="metric-card">
+        <div class="metric-header">
+          <div class="metric-title">Token usage · 24h</div>
+          <span class="status-pill pill-accent" style="font-size:9px;">Claude Sonnet 4</span>
+        </div>
+        <div class="mini-chart">
+          <div class="bar" style="height:30%"></div>
+          <div class="bar" style="height:50%"></div>
+          <div class="bar" style="height:40%"></div>
+          <div class="bar" style="height:80%"></div>
+          <div class="bar" style="height:60%"></div>
+          <div class="bar" style="height:90%"></div>
+          <div class="bar" style="height:70%"></div>
+          <div class="bar" style="height:100%;opacity:1"></div>
+        </div>
+        <div class="metric-value" style="color:var(--accent2);margin-top:10px;">48.2k</div>
+        <div class="metric-sub">tokens today · avg 1.8k/run</div>
+      </div>
+
+      <div class="metric-card">
+        <div class="metric-header">
+          <div class="metric-title">Pipeline success rate</div>
+          <span style="font-size:10px;color:var(--green)">last 30 runs</span>
+        </div>
+        <div class="mini-chart">
+          <div class="bar green" style="height:100%"></div>
+          <div class="bar green" style="height:100%"></div>
+          <div class="bar" style="height:100%;background:var(--red);opacity:0.7"></div>
+          <div class="bar green" style="height:100%"></div>
+          <div class="bar green" style="height:100%"></div>
+          <div class="bar green" style="height:100%"></div>
+          <div class="bar green" style="height:100%"></div>
+          <div class="bar green" style="height:100%;opacity:1"></div>
+        </div>
+        <div class="metric-value" style="color:var(--green);margin-top:10px;">93.3%</div>
+        <div class="metric-sub">28 / 30 successful</div>
+      </div>
+
+      <div class="metric-card">
+        <div class="metric-header">
+          <div class="metric-title">Avg run duration</div>
+          <span style="font-size:10px;color:var(--amber)">p50 / p95</span>
+        </div>
+        <div class="mini-chart">
+          <div class="bar amber" style="height:55%"></div>
+          <div class="bar amber" style="height:48%"></div>
+          <div class="bar amber" style="height:70%"></div>
+          <div class="bar amber" style="height:42%"></div>
+          <div class="bar amber" style="height:60%"></div>
+          <div class="bar amber" style="height:38%"></div>
+          <div class="bar amber" style="height:50%"></div>
+          <div class="bar amber" style="height:45%;opacity:1"></div>
+        </div>
+        <div class="metric-value" style="color:var(--amber);margin-top:10px;">2m 14s</div>
+        <div class="metric-sub">p95: 4m 38s · fastest: 1m 07s</div>
+      </div>
+    </div>
+
+    <!-- RUN HISTORY -->
+    <div class="pipeline-section">
+      <div class="section-header">
+        <div class="section-title">Recent runs</div>
+        <button class="btn" style="padding:5px 10px;font-size:10px;">View all →</button>
+      </div>
+      <table class="runs-table">
+        <thead>
+          <tr>
+            <th>Run ID</th>
+            <th>Pipeline</th>
+            <th>Triggered by</th>
+            <th>Status</th>
+            <th>Duration</th>
+            <th>Cost</th>
+            <th>Agents</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="run-id">#147</span></td>
+            <td><span class="run-trigger">store-generation-v2</span></td>
+            <td>webhook</td>
+            <td><span class="status-pill pill-green">● running</span></td>
+            <td><div class="duration-bar-wrap"><div class="duration-bar" style="width:60px"></div>1m 23s</div></td>
+            <td><span class="cost-val">$0.01</span></td>
+            <td>2/5</td>
+          </tr>
+          <tr>
+            <td><span class="run-id">#146</span></td>
+            <td><span class="run-trigger">store-generation-v2</span></td>
+            <td>api call</td>
+            <td><span class="status-pill pill-green">✓ success</span></td>
+            <td><div class="duration-bar-wrap"><div class="duration-bar" style="width:90px"></div>2m 07s</div></td>
+            <td><span class="cost-val">$0.18</span></td>
+            <td>5/5</td>
+          </tr>
+          <tr>
+            <td><span class="run-id">#145</span></td>
+            <td><span class="run-trigger">research-pipeline</span></td>
+            <td>scheduled</td>
+            <td><span class="status-pill pill-green">✓ success</span></td>
+            <td><div class="duration-bar-wrap"><div class="duration-bar" style="width:70px"></div>1m 44s</div></td>
+            <td><span class="cost-val">$0.09</span></td>
+            <td>3/3</td>
+          </tr>
+          <tr>
+            <td><span class="run-id">#144</span></td>
+            <td><span class="run-trigger">store-generation-v2</span></td>
+            <td>webhook</td>
+            <td><span class="status-pill pill-red">✗ failed</span></td>
+            <td><div class="duration-bar-wrap"><div class="duration-bar" style="width:120px;background:var(--red)"></div>3m 12s</div></td>
+            <td><span class="cost-val">$0.22</span></td>
+            <td>3/5</td>
+          </tr>
+          <tr>
+            <td><span class="run-id">#143</span></td>
+            <td><span class="run-trigger">content-gen-v1</span></td>
+            <td>manual</td>
+            <td><span class="status-pill pill-green">✓ success</span></td>
+            <td><div class="duration-bar-wrap"><div class="duration-bar" style="width:50px"></div>1m 07s</div></td>
+            <td><span class="cost-val">$0.07</span></td>
+            <td>2/2</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+  </div><!-- /content -->
+</div><!-- /main -->
+
+<script>
+// Tab switching
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+  });
+});
+
+// Nav item switching
+document.querySelectorAll('.nav-item').forEach(item => {
+  item.addEventListener('click', () => {
+    document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+    item.classList.add('active');
+  });
+});
+
+// Simulate log streaming
+const logBody = document.querySelector('.log-body');
+const newLogs = [
+  ['09:42:31', 'arch', '[architect]', 'Slot mapping: hero → brand.name, tagline → brand.tagline'],
+  ['09:42:35', 'arch', '[architect]', 'Color palette extracted: #1a1a2e, #e94560, #ffffff'],
+  ['09:42:40', 'arch', '[architect]', 'Handoff ready → Engineer · 2.1k tokens · $0.011'],
+  ['09:42:41', 'sys',  '[system]',    'Architect ✓ complete · queuing Engineer Agent'],
+  ['09:42:42', 'eng',  '[engineer]',  'Received context from Architect · loading template…'],
+];
+let logIdx = 0;
+function addLog() {
+  if (logIdx >= newLogs.length) return;
+  const [time, cls, agent, msg] = newLogs[logIdx++];
+  const line = document.createElement('div');
+  line.className = 'log-line';
+  line.innerHTML = `<span class="log-time">${time}</span><span class="log-agent ${cls}">${agent}</span><span class="log-msg">${msg}</span>`;
+  // Remove cursor from last line
+  logBody.querySelectorAll('.log-cursor').forEach(c => c.remove());
+  logBody.appendChild(line);
+  logBody.scrollTop = logBody.scrollHeight;
+  setTimeout(addLog, 3200 + Math.random() * 1800);
+}
+setTimeout(addLog, 4000);
+</script>
+</body>
+</html>

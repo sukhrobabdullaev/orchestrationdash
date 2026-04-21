@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pnpm --version)",
+      "Bash(docker --version)",
+      "Bash(pnpm install *)",
+      "Bash(pnpm typecheck *)",
+      "Bash(pnpm --filter @agentforge/api dev)",
+      "Bash(curl -s http://localhost:3001/health)",
+      "Bash(kill %1)",
+      "Bash(pnpm *)",
+      "mcp__claude_ai_Context7__resolve-library-id",
+      "Bash(docker compose up *)",
+      "Bash(sudo lsof *)",
+      "Bash(pg_ctl status *)",
+      "Bash(brew services *)"
+    ]
+  }
+}

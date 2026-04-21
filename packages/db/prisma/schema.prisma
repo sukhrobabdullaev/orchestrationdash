@@ -1,0 +1,253 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Enums ─────────────────────────────────────────────────────────────────
+
+enum RunStatus {
+  QUEUED
+  RUNNING
+  SUCCESS
+  FAILED
+}
+
+enum StepStatus {
+  PENDING
+  RUNNING
+  SUCCESS
+  FAILED
+}
+
+enum TriggerType {
+  manual
+  webhook
+  schedule
+}
+
+enum AgentRole {
+  pm
+  architect
+  engineer
+  qa
+  deploy
+  custom
+}
+
+enum LogLevel {
+  info
+  warn
+  error
+}
+
+enum AlertType {
+  cost_threshold
+  failure_rate
+}
+
+// ─── Models ────────────────────────────────────────────────────────────────
+
+model User {
+  id            String    @id @default(cuid())
+  name          String
+  email         String    @unique
+  emailVerified Boolean   @default(false)
+  image         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  sessions   Session[]
+  accounts   Account[]
+  workspaces WorkspaceMember[]
+
+  @@map("user")
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  expiresAt DateTime
+  token     String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  ipAddress String?
+  userAgent String?
+  userId    String
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("session")
+}
+
+model Account {
+  id                    String    @id @default(cuid())
+  accountId             String
+  providerId            String
+  userId                String
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("account")
+}
+
+model Verification {
+  id         String    @id @default(cuid())
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime? @default(now())
+  updatedAt  DateTime? @updatedAt
+
+  @@map("verification")
+}
+
+model Workspace {
+  id        String     @id @default(cuid())
+  name      String
+  apiKey    String     @unique @default(cuid())
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  pipelines Pipeline[]
+  runs      Run[]
+  members   WorkspaceMember[]
+  alerts    Alert[]
+}
+
+model WorkspaceMember {
+  id          String   @id @default(cuid())
+  workspaceId String
+  userId      String
+  role        String   @default("owner")
+  createdAt   DateTime @default(now())
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([workspaceId, userId])
+  @@index([userId])
+}
+
+model Pipeline {
+  id          String      @id @default(cuid())
+  name        String
+  description String?
+  definition  Json        // PipelineDefinition: { nodes: AgentNode[], edges: PipelineEdge[] }
+  trigger     TriggerType @default(manual)
+  workspaceId String
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  workspace    Workspace     @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  agentConfigs AgentConfig[]
+  runs         Run[]
+
+  @@index([workspaceId])
+}
+
+model AgentConfig {
+  id           String    @id @default(cuid())
+  role         AgentRole
+  name         String
+  model        String    // e.g. "claude-sonnet-4-5", "gpt-4o-mini"
+  systemPrompt String
+  tools        String[]  @default([])
+  pipelineId   String
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  pipeline Pipeline @relation(fields: [pipelineId], references: [id], onDelete: Cascade)
+
+  @@index([pipelineId])
+}
+
+model Run {
+  id            String    @id @default(cuid())
+  pipelineId    String
+  workspaceId   String
+  status        RunStatus @default(QUEUED)
+  trigger       TriggerType
+  input         String    // raw input string that started the run
+  startedAt     DateTime?
+  finishedAt    DateTime?
+  totalTokens   Int       @default(0)
+  totalCostUsd  Float     @default(0)
+  createdAt     DateTime  @default(now())
+
+  pipeline  Pipeline  @relation(fields: [pipelineId], references: [id])
+  workspace Workspace @relation(fields: [workspaceId], references: [id])
+  steps     RunStep[]
+
+  @@index([pipelineId])
+  @@index([workspaceId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model RunStep {
+  id           String     @id @default(cuid())
+  runId        String
+  agentRole    AgentRole
+  agentName    String
+  model        String
+  status       StepStatus @default(PENDING)
+  inputTokens  Int        @default(0)
+  outputTokens Int        @default(0)
+  costUsd      Float      @default(0)
+  durationMs   Int?
+  output       Json?      // structured agent output written to message pool
+  startedAt    DateTime?
+  finishedAt   DateTime?
+  createdAt    DateTime   @default(now())
+
+  run  Run   @relation(fields: [runId], references: [id], onDelete: Cascade)
+  logs Log[]
+
+  @@index([runId])
+}
+
+model Alert {
+  id              String    @id @default(cuid())
+  workspaceId     String
+  name            String
+  type            AlertType
+  threshold       Float
+  windowRuns      Int       @default(20)
+  enabled         Boolean   @default(true)
+  lastFiredAt     DateTime?
+  slackWebhookUrl String?
+  webhookUrl      String?
+  emailTo         String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@index([workspaceId])
+}
+
+model Log {
+  id        String   @id @default(cuid())
+  runStepId String
+  timestamp DateTime @default(now())
+  level     LogLevel @default(info)
+  message   String
+
+  step RunStep @relation(fields: [runStepId], references: [id], onDelete: Cascade)
+
+  @@index([runStepId])
+  @@index([timestamp])
+}
