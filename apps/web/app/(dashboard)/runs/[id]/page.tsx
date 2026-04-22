@@ -3,14 +3,15 @@ import { StatusPill } from '@/components/ui/StatusPill'
 import { LogStream } from '@/components/runs/LogStream'
 import { PoolInspector } from '@/components/runs/PoolInspector'
 import { OutputViewer } from '@/components/runs/OutputViewer'
-import { api, type RunStep } from '@/lib/api'
+import { apiServer } from '@/lib/api-server'
+import { type RunStep } from '@/lib/api'
 import { notFound } from 'next/navigation'
 
 const API_URL = process.env['NEXT_PUBLIC_API_URL'] ?? 'http://localhost:3001'
 
 export default async function RunDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
-  const run = await api.run(id).catch(() => null)
+  const run = await apiServer.run(id).catch(() => null)
   if (!run) notFound()
 
   const isLive = run.status === 'RUNNING' || run.status === 'QUEUED'

@@ -1,13 +1,14 @@
 import { Topbar } from '@/components/layout/Topbar'
 import { StatCard } from '@/components/ui/StatCard'
 import { StatusPill } from '@/components/ui/StatusPill'
-import { api, type Run } from '@/lib/api'
+import { apiServer } from '@/lib/api-server'
+import { type Run } from '@/lib/api'
 import Link from 'next/link'
 
 export default async function OverviewPage() {
   const [stats, runs] = await Promise.all([
-    api.stats().catch(() => null),
-    api.runs({ limit: '5' }).catch(() => []),
+    apiServer.stats().catch(() => null),
+    apiServer.runs({ limit: '5' }).catch(() => []),
   ])
 
   return (

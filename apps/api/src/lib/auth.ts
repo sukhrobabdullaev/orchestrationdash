@@ -23,6 +23,14 @@ export const auth = betterAuth({
     expiresIn: 60 * 60 * 24 * 30, // 30 days
     cookieCache: { enabled: true, maxAge: 60 * 5 },
   },
+  advanced: {
+    cookieOptions: {
+      sameSite: 'lax',
+      httpOnly: true,
+      secure: process.env['NODE_ENV'] === 'production',
+      path: '/',
+    },
+  },
   databaseHooks: {
     user: {
       create: {

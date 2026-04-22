@@ -1,9 +1,16 @@
+'use client'
+
 import { Topbar } from '@/components/layout/Topbar'
 import { api, type Pipeline } from '@/lib/api'
 import Link from 'next/link'
+import { useEffect, useState } from 'react'
 
-export default async function PipelinesPage() {
-  const pipelines = await api.pipelines().catch(() => [] as Pipeline[])
+export default function PipelinesPage() {
+  const [pipelines, setPipelines] = useState<Pipeline[]>([])
+
+  useEffect(() => {
+    api.pipelines().then(setPipelines).catch(() => setPipelines([]))
+  }, [])
 
   return (
     <>

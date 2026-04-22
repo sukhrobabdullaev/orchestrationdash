@@ -15,7 +15,6 @@ import { BuilderToolbar } from '@/components/builder/BuilderToolbar'
 import type { Pipeline } from '@/lib/api'
 
 const API = process.env['NEXT_PUBLIC_API_URL'] ?? 'http://localhost:3001'
-const WORKSPACE_ID = 'cmo66nv1j0000yn9z2pkz97tm'
 
 const nodeTypes = { agent: AgentNode }
 const edgeTypes = { agent: AgentEdge }
@@ -66,17 +65,33 @@ function BuilderPageContent() {
   // Load from DB on mount — if ?id= param present, fetch that pipeline
   useEffect(() => {
     const id = searchParams.get('id')
-    const fetchList = fetch(`${API}/pipelines`).then(r => r.json() as Promise<Pipeline[]>)
+    // #region agent log
+    fetch('http://127.0.0.1:7570/ingest/69b88065-f2d7-475d-86db-a99ded2ad13e',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'46580c'},body:JSON.stringify({sessionId:'46580c',runId:'pre-fix',hypothesisId:'H1',location:'builder/page.tsx:68',message:'builder load effect start',data:{hasId:Boolean(id),idValue:id ?? null},timestamp:Date.now()})}).catch(()=>{})
+    // #endregion
+    const fetchList = fetch(`${API}/pipelines`, { credentials: 'include' }).then(async r => {
+      // #region agent log
+      fetch('http://127.0.0.1:7570/ingest/69b88065-f2d7-475d-86db-a99ded2ad13e',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'46580c'},body:JSON.stringify({sessionId:'46580c',runId:'pre-fix',hypothesisId:'H1',location:'builder/page.tsx:70',message:'pipelines list response',data:{ok:r.ok,status:r.status},timestamp:Date.now()})}).catch(()=>{})
+      // #endregion
+      return r.json() as Promise<Pipeline[]>
+    })
 
     if (id) {
       Promise.all([
-        fetch(`${API}/pipelines/${id}`).then(r => r.json() as Promise<Pipeline>),
+        fetch(`${API}/pipelines/${id}`, { credentials: 'include' }).then(async r => {
+          // #region agent log
+          fetch('http://127.0.0.1:7570/ingest/69b88065-f2d7-475d-86db-a99ded2ad13e',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'46580c'},body:JSON.stringify({sessionId:'46580c',runId:'pre-fix',hypothesisId:'H3',location:'builder/page.tsx:78',message:'pipeline by id response',data:{id,ok:r.ok,status:r.status},timestamp:Date.now()})}).catch(()=>{})
+          // #endregion
+          return r.json() as Promise<Pipeline>
+        }),
         fetchList,
       ]).then(([pipeline, list]) => {
+        // #region agent log
+        fetch('http://127.0.0.1:7570/ingest/69b88065-f2d7-475d-86db-a99ded2ad13e',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'46580c'},body:JSON.stringify({sessionId:'46580c',runId:'pre-fix',hypothesisId:'H3',location:'builder/page.tsx:83',message:'pipeline payload shape after load by id',data:{pipelineId:(pipeline as { id?: string }).id ?? null,pipelineNameType:typeof (pipeline as { name?: unknown }).name,pipelineNameValue:(pipeline as { name?: string }).name ?? null},timestamp:Date.now()})}).catch(()=>{})
+        // #endregion
         const { nodes: n, edges: e } = definitionToFlow(pipeline)
         setNodes(n); setEdges(e)
-        setPipelineName(pipeline.name)
-        setTrigger(pipeline.trigger)
+        setPipelineName(pipeline.name || 'My Pipeline')
+        setTrigger(pipeline.trigger || 'manual')
         const def = pipeline.definition as { schedule?: { cron?: string } } | undefined
         if (def?.schedule?.cron) setCron(def.schedule.cron)
         setPipelineId(pipeline.id)
@@ -134,8 +149,8 @@ function BuilderPageContent() {
     skipDirty.current = true
     const { nodes: n, edges: e } = definitionToFlow(pipeline)
     setNodes(n); setEdges(e)
-    setPipelineName(pipeline.name)
-    setTrigger(pipeline.trigger)
+    setPipelineName(pipeline.name || 'My Pipeline')
+    setTrigger(pipeline.trigger || 'manual')
     const def = pipeline.definition as { schedule?: { cron?: string } } | undefined
     if (def?.schedule?.cron) setCron(def.schedule.cron)
     setPipelineId(pipeline.id)
@@ -165,20 +180,29 @@ function BuilderPageContent() {
         edges: edges.map(e => ({ id: e.id, source: e.source, target: e.target })),
         ...(trigger === 'schedule' && { schedule: { cron } }),
       }
-      const body = { name: pipelineName, trigger, definition, workspaceId: WORKSPACE_ID }
+      const body = { name: pipelineName, trigger, definition }
 
       let savedPipeline: Pipeline
       if (pipelineId) {
-        const res = await fetch(`${API}/pipelines/${pipelineId}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
+        const res = await fetch(`${API}/pipelines/${pipelineId}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, credentials: 'include', body: JSON.stringify(body) })
+        // #region agent log
+        fetch('http://127.0.0.1:7570/ingest/69b88065-f2d7-475d-86db-a99ded2ad13e',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'46580c'},body:JSON.stringify({sessionId:'46580c',runId:'pre-fix',hypothesisId:'H2',location:'builder/page.tsx:183',message:'update pipeline response',data:{pipelineId,ok:res.ok,status:res.status},timestamp:Date.now()})}).catch(()=>{})
+        // #endregion
         savedPipeline = await res.json() as Pipeline
       } else {
-        const res = await fetch(`${API}/pipelines`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
+        const res = await fetch(`${API}/pipelines`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include', body: JSON.stringify(body) })
+        // #region agent log
+        fetch('http://127.0.0.1:7570/ingest/69b88065-f2d7-475d-86db-a99ded2ad13e',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'46580c'},body:JSON.stringify({sessionId:'46580c',runId:'pre-fix',hypothesisId:'H2',location:'builder/page.tsx:188',message:'create pipeline response',data:{ok:res.ok,status:res.status},timestamp:Date.now()})}).catch(()=>{})
+        // #endregion
         savedPipeline = await res.json() as Pipeline
+        // #region agent log
+        fetch('http://127.0.0.1:7570/ingest/69b88065-f2d7-475d-86db-a99ded2ad13e',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'46580c'},body:JSON.stringify({sessionId:'46580c',runId:'pre-fix',hypothesisId:'H2',location:'builder/page.tsx:191',message:'create pipeline payload parsed',data:{savedPipelineId:(savedPipeline as { id?: string }).id ?? null,savedPipelineNameType:typeof (savedPipeline as { name?: unknown }).name,savedPipelineError:(savedPipeline as { error?: string }).error ?? null},timestamp:Date.now()})}).catch(()=>{})
+        // #endregion
         setPipelineId(savedPipeline.id)
         router.replace(`/builder?id=${savedPipeline.id}`)
       }
 
-      const list = await fetch(`${API}/pipelines`).then(r => r.json()) as Pipeline[]
+      const list = await fetch(`${API}/pipelines`, { credentials: 'include' }).then(r => r.json()) as Pipeline[]
       setPipelines(list)
       setDirty(false)
     } catch (err) {

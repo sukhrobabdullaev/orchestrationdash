@@ -1,7 +1,7 @@
 'use client'
 
 import { Save, FolderOpen, Plus, Copy, Check } from 'lucide-react'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import type { Pipeline } from '@/lib/api'
 
 const API = process.env['NEXT_PUBLIC_API_URL'] ?? 'http://localhost:3001'
@@ -14,6 +14,7 @@ const PRESETS = [
 ]
 
 function describeCron(cron: string): string {
+  if (!cron || typeof cron !== 'string') return cron || ''
   const parts = cron.trim().split(/\s+/)
   if (parts.length !== 5) return cron
   const [min, hour, dom, month, dow] = parts as [string, string, string, string, string]
@@ -52,6 +53,13 @@ export function BuilderToolbar({
 }: BuilderToolbarProps) {
   const [copied, setCopied] = useState(false)
   const webhookUrl = pipelineId ? `${API}/webhooks/${pipelineId}` : null
+
+  useEffect(() => {
+    if (typeof name === 'string') return
+    // #region agent log
+    fetch('http://127.0.0.1:7570/ingest/69b88065-f2d7-475d-86db-a99ded2ad13e',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'46580c'},body:JSON.stringify({sessionId:'46580c',runId:'pre-fix',hypothesisId:'H4',location:'builder/BuilderToolbar.tsx:57',message:'toolbar received non-string name prop',data:{nameType:typeof name,pipelineId:pipelineId ?? null,trigger},timestamp:Date.now()})}).catch(()=>{})
+    // #endregion
+  }, [name, pipelineId, trigger])
 
   const copyWebhook = () => {
     if (!webhookUrl) return
@@ -140,14 +148,14 @@ export function BuilderToolbar({
       {/* Save */}
       <button
         onClick={onSave}
-        disabled={saving || !name.trim()}
+        disabled={saving || !name || !name.trim()}
         style={{
           display: 'flex', alignItems: 'center', gap: '5px',
           background: dirty ? '#7c6aff' : '#18181c',
           border: `1px solid ${dirty ? '#7c6aff' : '#27272a'}`,
           borderRadius: '5px', padding: '4px 10px',
           fontSize: '11px', color: dirty ? '#fff' : '#52525b',
-          cursor: saving || !name.trim() ? 'not-allowed' : 'pointer',
+          cursor: saving || !name || !name.trim() ? 'not-allowed' : 'pointer',
           fontFamily: 'var(--font-mono)', transition: 'all 0.15s',
         }}
       >

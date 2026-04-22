@@ -3,9 +3,10 @@ import { Activity } from 'lucide-react'
 interface TopbarProps {
   title: string
   description?: string
+  children?: React.ReactNode
 }
 
-export function Topbar({ title, description }: TopbarProps) {
+export function Topbar({ title, description, children }: TopbarProps) {
   return (
     <header style={{
       height: '56px',
@@ -27,6 +28,7 @@ export function Topbar({ title, description }: TopbarProps) {
       </div>
 
       <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+        {children}
         <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', color: '#22d3a0' }}>
           <Activity size={12} />
           <span>api live</span>

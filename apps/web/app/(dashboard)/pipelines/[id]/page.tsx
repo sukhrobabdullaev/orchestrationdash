@@ -1,6 +1,8 @@
 import { Topbar } from '@/components/layout/Topbar'
 import { StatusPill } from '@/components/ui/StatusPill'
-import { api, type Run } from '@/lib/api'
+import { RunPipelineButton } from '@/components/pipelines/RunPipelineButton'
+import { apiServer } from '@/lib/api-server'
+import { type Run } from '@/lib/api'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 
@@ -45,8 +47,8 @@ function orderNodes(
 export default async function PipelineDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   const [pipeline, runs] = await Promise.all([
-    api.pipeline(id).catch(() => null),
-    api.runs({ pipelineId: id, limit: '10' }).catch(() => [] as Run[]),
+    apiServer.pipeline(id).catch(() => null),
+    apiServer.runs({ pipelineId: id, limit: '10' }).catch(() => [] as Run[]),
   ])
 
   if (!pipeline) notFound()
@@ -57,7 +59,9 @@ export default async function PipelineDetailPage({ params }: { params: Promise<{
 
   return (
     <>
-      <Topbar title={pipeline.name} description={pipeline.description ?? 'pipeline canvas'} />
+      <Topbar title={pipeline.name} description={pipeline.description ?? 'pipeline canvas'}>
+        <RunPipelineButton pipelineId={id} />
+      </Topbar>
       <main style={{ padding: '28px', display: 'flex', flexDirection: 'column', gap: '28px' }}>
 
         {/* Canvas */}

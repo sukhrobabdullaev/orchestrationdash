@@ -1,6 +1,7 @@
 import { Topbar } from '@/components/layout/Topbar'
 import { StatusPill } from '@/components/ui/StatusPill'
-import { api, type Run } from '@/lib/api'
+import { apiServer } from '@/lib/api-server'
+import { type Run } from '@/lib/api'
 import Link from 'next/link'
 
 export default async function RunsPage({
@@ -9,7 +10,7 @@ export default async function RunsPage({
   searchParams: Promise<{ status?: string }>
 }) {
   const { status } = await searchParams
-  const runs = await api.runs(status ? { status } : {}).catch(() => [])
+  const runs = await apiServer.runs(status ? { status } : {}).catch(() => [])
 
   const STATUSES = ['', 'QUEUED', 'RUNNING', 'SUCCESS', 'FAILED']
 

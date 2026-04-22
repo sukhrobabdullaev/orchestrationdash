@@ -1,12 +1,13 @@
 import { Topbar } from '@/components/layout/Topbar'
 import { StatCard } from '@/components/ui/StatCard'
 import { CostBarChart, TokenBarChart } from '@/components/charts/CostChart'
-import { api, type Run } from '@/lib/api'
+import { apiServer } from '@/lib/api-server'
+import { type Run } from '@/lib/api'
 
 export default async function CostPage() {
   const [stats, runs] = await Promise.all([
-    api.stats().catch(() => null),
-    api.runs({ limit: '30' }).catch(() => [] as Run[]),
+    apiServer.stats().catch(() => null),
+    apiServer.runs({ limit: '30' }).catch(() => [] as Run[]),
   ])
 
   // Build chart data — most recent 20 successful runs, oldest→newest
