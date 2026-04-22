@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { Suspense, useCallback, useEffect, useRef, useState } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import {
   ReactFlow, Background, Controls, MiniMap,
@@ -47,7 +47,7 @@ function definitionToFlow(pipeline: Pipeline): { nodes: Node[]; edges: Edge[] } 
   return { nodes, edges }
 }
 
-export default function BuilderPage() {
+function BuilderPageContent() {
   const searchParams = useSearchParams()
   const router = useRouter()
 
@@ -86,7 +86,7 @@ export default function BuilderPage() {
     } else {
       fetchList.then(list => { setPipelines(list); skipDirty.current = false }).catch(() => { skipDirty.current = false })
     }
-  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [searchParams, setEdges, setNodes])
 
   // Warn before leaving with unsaved changes
   useEffect(() => {
@@ -229,6 +229,14 @@ export default function BuilderPage() {
         )}
       </div>
     </div>
+  )
+}
+
+export default function BuilderPage() {
+  return (
+    <Suspense fallback={<div style={{ padding: '28px', color: '#52525b', fontSize: '12px' }}>Loading builder...</div>}>
+      <BuilderPageContent />
+    </Suspense>
   )
 }
 

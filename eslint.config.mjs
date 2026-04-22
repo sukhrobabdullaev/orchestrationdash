@@ -4,7 +4,14 @@ import tsParser from '@typescript-eslint/parser'
 /** @type {import('eslint').Linter.Config[]} */
 export default [
   {
-    ignores: ['**/node_modules/**', '**/.next/**', '**/dist/**', '**/.turbo/**'],
+    ignores: [
+      '**/node_modules/**',
+      '**/.next/**',
+      '**/dist/**',
+      '**/.turbo/**',
+      '**/packages/db/generated/**',
+      '**/packages/db/prisma.config.ts',
+    ],
   },
   {
     files: ['**/*.ts', '**/*.tsx'],

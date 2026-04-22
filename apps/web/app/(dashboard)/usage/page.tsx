@@ -9,11 +9,6 @@ import {
 
 const API = process.env['NEXT_PUBLIC_API_URL'] ?? 'http://localhost:3001'
 
-const ROLE_COLOR: Record<string, string> = {
-  pm: '#7c6aff', architect: '#22d3a0', engineer: '#f59e0b',
-  qa: '#f43f5e', deploy: '#a78bfa', custom: '#38bdf8',
-}
-
 interface UsageData {
   daily:      { date: string; tokens: number; cost: number; runs: number }[]
   monthly:    { month: string; tokens: number; cost: number; runs: number }[]
